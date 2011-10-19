@@ -1,0 +1,16 @@
+pkgsrc for Harmattan
+
+Beginning with Debian/Lenny from http://people.debian.org/~aurel32/qemu/armel/
+
+apt-get install ksh gcc bzip2 zsh
+wget ftp://ftp.netbsd.org/pub/pkgsrc/pkgsrc-2011Q3/pkgsrc.tar.gz
+tar -xjvf pkgsrc.tar.gz  #Takes forever!
+#fix LOCALBASE
+cd pkgsrc/bootstrap
+export SH=/bin/ksh
+./bootstrap --prefix=/opt/pkgsrc 
+
+Now adjust the $PATH and build misc/figlet, making the archive 6M.
+Adding databases/sqlite3 brings the size to 23M.  Rsync /opt/pkgsrc
+to debian/pkgsrc/opt/pkgsrc
+

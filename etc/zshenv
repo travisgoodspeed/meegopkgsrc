@@ -1,0 +1,4 @@
+export PATH=/opt/pkgsrc/bin:/opt/pkgsrc/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11
+export prompt='%m%# '
+
+figlet pkgsrc

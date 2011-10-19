@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=pkgsrc
+Comment=NetBSD pkgsrc for the N9
+Icon=/usr/share/icons/hicolor/80x80/apps/pkgsrc.png
+Exec=/usr/bin/meego-terminal -e /opt/pkgsrc/bin/zsh
+Type=Application
+Categories=Development;

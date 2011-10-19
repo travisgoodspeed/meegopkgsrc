@@ -1,0 +1,13 @@
+Package: pkgsrc
+Version: 0.0.2
+Architecture: armel
+Maintainer: Travis Goodspeed <travis@radiantmachines.com>
+Depends: 
+Section: user/other
+Priority: optional
+Homepage: http://travisgoodspeed.blogspot.com/
+Description: NetBSD pkgsrc for Harmattan on the N9.
+ This is an attempt at porting NetBSD's pkgsrc to Meego/Harmattan
+ on the Noka N9.  It is not yet self-hosting, but very soon it
+ ought to be able to compile its own packages locally.
+Maemo-Display-Name: pkgsrc
