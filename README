@@ -12,5 +12,14 @@ export SH=/bin/ksh
 
 Now adjust the $PATH and build misc/figlet, making the archive 6M.
 Adding databases/sqlite3 brings the size to 23M.  Rsync /opt/pkgsrc
-to debian/pkgsrc/opt/pkgsrc
+to debian/pkgsrc/opt/pkgsrc for use in packaging.
+
+Before building the package, you must have PERL5LIB,
+AEGIS_TOOL_PREFIX, and SYSROOT_DIR set to the appropriate values.
+On my machine, these are as follows.
+
+PERL5LIB=/opt/qtsdk/Maemo/4.6.2/madlib/perl5/
+AEGIS_TOOL_PREFIX=/opt/qtsdk/Madde/targets/harmattan-nokia-meego-api/bin/
+SYSROOT_DIR=/opt/qtsdk/Madde/sysroots/harmattan-nokia-arm-sysroot
+
 
