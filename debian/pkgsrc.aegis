@@ -1,0 +1,6 @@
+<aegis>
+   <request>
+      <credential name="CAP::net_raw" />
+      <for path="/opt/silvertooth/bin/psm_scan" />
+   </request>
+</aegis>

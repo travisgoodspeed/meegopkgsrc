@@ -1,5 +1,5 @@
 Package: pkgsrc
-Version: 0.0.2
+Version: 0.0.3
 Architecture: armel
 Maintainer: Travis Goodspeed <travis@radiantmachines.com>
 Depends: 
