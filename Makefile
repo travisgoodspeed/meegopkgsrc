@@ -36,6 +36,7 @@ put: build
 clean:
 	rm -rf dest
 reload:
+	mkdir -p debian/pkgsrc/opt
 	cd debian/pkgsrc/opt && rsync -ave ssh --delete root@$(compilehost):/opt/pkgsrc ./
 install: put
 	ssh root@n9 dpkg -i /$(compilehost)/user/MyDocs/`ls dest`
