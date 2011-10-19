@@ -21,14 +21,14 @@ build: clean
 	cp etc/* debian/pkgsrc/opt/pkgsrc/etc/
 	#Clean old files.
 	rm -rf debian/pkgsrc/DEBIAN
-	rm -f debian/pkgsrc.*
+	rm -f debian/pkgsrc.tarlist
 	mkdir -p debian/pkgsrc/DEBIAN
 	mkdir dest
 	cp debian/control debian/pkgsrc/DEBIAN/
 	echo "Installed-Size: " `du -sk debian/pkgsrc | sed 's/debian.*//'` >>debian/pkgsrc/DEBIAN/control
 	dpkg-deb --build debian/pkgsrc dest
 	#Add the aegis manifest.
-	ar q dest/pkgsrc_0.0.3_armel.deb debian/_aegis
+	#ar q dest/pkgsrc_0.0.3_armel.deb debian/_aegis
 
 put: build
 	ssh root@n9 rm -f /$(compilehost)/user/MyDocs/`ls dest`
