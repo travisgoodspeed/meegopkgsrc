@@ -11,4 +11,3 @@ Description: NetBSD pkgsrc for Harmattan on the N9.
  on the Noka N9.  It is not yet self-hosting, but very soon it
  ought to be able to compile its own packages locally.
 Maemo-Display-Name: pkgsrc
-
