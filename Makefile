@@ -10,7 +10,7 @@ compilehost=home
 
 all: build
 
-build: clean 
+build: clean
 	#Finally, package it up.
 	rm -rf debian/pkgsrc/usr
 	mkdir -p debian/pkgsrc/usr/share/applications
@@ -26,8 +26,14 @@ build: clean
 	mkdir dest
 	cp debian/control debian/pkgsrc/DEBIAN/
 	echo "Installed-Size: " `du -sk debian/pkgsrc | sed 's/debian.*//'` >>debian/pkgsrc/DEBIAN/control
+	make digsigsums
 	dpkg-deb --build debian/pkgsrc dest
-
+digsigsums:
+	rm -rf /tmp/pkgsrc
+	mkdir -p /tmp/pkgsrc/opt/pkgsrc/
+	rsync -apv debian/pkgsrc/opt/pkgsrc/bin  /tmp/pkgsrc/opt/pkgsrc/
+	rsync -apv --exclude python2.6 --exclude perl5 --exclude man --exclude zsh --exclude emacs --exclude version.pm debian/pkgsrc/opt/pkgsrc/lib  /tmp/pkgsrc/opt/pkgsrc/
+	gendigsigsums - /tmp/pkgsrc >debian/pkgsrc/DEBIAN/digsigsums
 put: build
 	ssh root@n9 rm -f /$(compilehost)/user/MyDocs/`ls dest`
 	cd dest && scp pkgsrc**.deb root@n9:/$(compilehost)/user/MyDocs/
