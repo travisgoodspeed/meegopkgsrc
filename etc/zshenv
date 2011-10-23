@@ -1,4 +1,7 @@
 export PATH=/opt/pkgsrc/bin:/opt/pkgsrc/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/X11
 export prompt='%m%# '
 
-#figlet pkgsrc
+# This might interfere with X11 forwarding, but as I can't get X11
+# forwarding to work, I see no harm in it.
+export DISPLAY=:0
+
