@@ -32,16 +32,17 @@ digsigsums:
 	rm -rf /tmp/pkgsrc
 	mkdir -p /tmp/pkgsrc/opt/pkgsrc/
 	rsync -apv debian/pkgsrc/opt/pkgsrc/bin  /tmp/pkgsrc/opt/pkgsrc/
-	#rsync -apv --exclude python2.6 --exclude perl5 --exclude man --exclude zsh --exclude emacs --exclude version.pm debian/pkgsrc/opt/pkgsrc/lib  /tmp/pkgsrc/opt/pkgsrc/
+	#rsync -apv debian/pkgsrc/opt/pkgsrc/libexec  /tmp/pkgsrc/opt/pkgsrc/
+	rsync -apv --exclude python2.6 --exclude perl5 --exclude tk8.4 --exclude tcl8.4 --exclude man --exclude zsh --exclude emacs --exclude version.pm debian/pkgsrc/opt/pkgsrc/lib  /tmp/pkgsrc/opt/pkgsrc/
 	gendigsigsums - /tmp/pkgsrc >debian/pkgsrc/DEBIAN/digsigsums
-put: build
+put:
 	ssh root@n9 rm -f /$(compilehost)/user/MyDocs/`ls dest`
 	cd dest && scp pkgsrc**.deb root@n9:/$(compilehost)/user/MyDocs/
 clean:
 	rm -rf dest
 reload:
 	mkdir -p debian/pkgsrc/opt
-	cd debian/pkgsrc/opt && rsync -ave ssh --delete root@$(compilehost):/opt/pkgsrc ./
+	cd debian/pkgsrc/opt && rsync -ave ssh --progress --delete $(compilehost):/opt/pkgsrc ./
 install: put
 	ssh root@n9 dpkg -i /$(compilehost)/user/MyDocs/`ls dest`
-	ssh root@n9 rm -f /$(compilehost)/user/MyDocs/`ls dest`
+	#ssh root@n9 rm -f /$(compilehost)/user/MyDocs/`ls dest`
