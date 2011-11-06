@@ -32,17 +32,22 @@ digsigsums:
 	rm -rf /tmp/pkgsrc
 	mkdir -p /tmp/pkgsrc/opt/pkgsrc/
 	rsync -apv debian/pkgsrc/opt/pkgsrc/bin  /tmp/pkgsrc/opt/pkgsrc/
+	#Needed for git, but breaks compatibility.
 	#rsync -apv debian/pkgsrc/opt/pkgsrc/libexec  /tmp/pkgsrc/opt/pkgsrc/
 	rsync -apv --exclude python2.6 --exclude perl5 --exclude tk8.4 --exclude tcl8.4 --exclude man --exclude zsh --exclude emacs --exclude version.pm debian/pkgsrc/opt/pkgsrc/lib  /tmp/pkgsrc/opt/pkgsrc/
 	gendigsigsums - /tmp/pkgsrc >debian/pkgsrc/DEBIAN/digsigsums
 put:
-	ssh root@n9 rm -f /$(compilehost)/user/MyDocs/`ls dest`
-	cd dest && scp pkgsrc**.deb root@n9:/$(compilehost)/user/MyDocs/
+	ssh root@n9 rm -f /home/user/MyDocs/`ls dest`
+	cd dest && scp pkgsrc**.deb root@n9:/home/user/MyDocs/
 clean:
 	rm -rf dest
 reload:
 	mkdir -p debian/pkgsrc/opt
-	cd debian/pkgsrc/opt && rsync -ave ssh --progress --delete $(compilehost):/opt/pkgsrc ./
+	cd debian/pkgsrc/opt && rsync -ave ssh --progress --delete root@$(compilehost):/opt/pkgsrc ./
+	#Corrections for various app privs, doesn't seem to work.
+	chmod +x debian/pkgsrc/opt/pkgsrc/libexec/git-core/* || true
+	chmod +x debian/pkgsrc/opt/pkgsrc/lib/ivl/ivl || true
+	chmod +x debian/pkgsrc/opt/pkgsrc/lib/ivl/ivlpp || true
 install: put
 	ssh root@n9 dpkg -i /$(compilehost)/user/MyDocs/`ls dest`
 	#ssh root@n9 rm -f /$(compilehost)/user/MyDocs/`ls dest`
