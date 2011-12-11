@@ -22,4 +22,7 @@ PERL5LIB=/opt/qtsdk/Maemo/4.6.2/madlib/perl5/
 AEGIS_TOOL_PREFIX=/opt/qtsdk/Madde/targets/harmattan-nokia-meego-api/bin/
 SYSROOT_DIR=/opt/qtsdk/Madde/sysroots/harmattan-nokia-arm-sysroot
 
-
+For large installations, you will need to replace the QtSDK version of
+dh_fixperms with the version found here.  It has been patched to fail
+gracefully when the number of files exceeds the maximum argc/argv
+limit.

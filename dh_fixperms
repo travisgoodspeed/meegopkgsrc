@@ -1,0 +1,209 @@
+#!/usr/bin/perl
+
+# Patched by @travisgoodspeed to fail gracefull on massive packages.
+
+# Created: Thu Mar 12 14:55:27 EET 2009
+
+use strict;
+use warnings;
+
+use Debian::Debhelper::Dh_Lib;
+use Digest::MD5 qw(md5_hex);
+
+
+#  See "less `which dh_fixmperms`" in debian (derived) machine to
+#  compare with original...
+
+init();
+
+$" = ' ';
+
+sub trickysymlink($)
+{
+	# symlink trick for (file)systems that doesn't support those
+	# see .../madlib/w32_ln.pl in MADDE sources for reference.
+	open I, $_[0] or return undef;
+	local $_;
+	$_ = <I>;
+	close I, return undef unless /^Symbolic Link!$/;
+	$_ = <I>;
+	close I, return undef unless /^\d+$/;
+	my $len = $_ + 0;
+	close I, return undef if $len > 4096;
+	my $sum = <I>; chomp $sum;
+	my $dest; read I, $dest, $len;
+	close I;
+	my $md5sum = md5_hex $dest;
+	return undef if $md5sum ne $sum;
+	return $dest;
+}
+
+my %fixhash;
+sub fillfixhash($)
+{
+    return unless -f $_[0];
+    open I, '<', $_[0] or die "Opening '$_[0]' failed: $!}\n";
+    while (<I>) {
+	s/#.*//; next if /^\s*$/;
+	s/\s+$//;
+	my @l = split /\s+/, $_, 5;
+	die "'$_[0]' line $.: Illegal perm '$l[0]' in '$_'\n"
+	    if ($l[0] ne '000' and oct($l[0]) == 0);
+	die "'$_[0]' line $.: '$l[1]' not 'root' in '$_'\n" if $l[1] ne 'root';
+	die "'$_[0]' line $.: '$l[2]' not 'root' in '$_'\n" if $l[2] ne 'root';
+	die "'$_[0]' line $.: '$l[3]' not '.' in '$_'\n" if $l[3] ne '.';
+	$fixhash{$l[4]} = \@l;
+	$l[4] = $.;
+    }
+    close I;
+}
+
+sub makesymlink($$)
+{
+    ( $_[0]->[0], $_[0]->[5], $_[0]->[6] ) = ( '---', '->', $_[1] );
+}
+
+sub makehardlink($$)
+{
+    ( $_[0]->[0], $_[0]->[5], $_[0]->[6] ) = ( '===', '=>', $_[1] );
+}
+
+
+my %maybeee;
+sub fixfile(@) 
+{
+    my $ref = shift;
+    my $perm = shift;
+    my $fhe = delete $fixhash{$ref->[4]};
+    if (defined $fhe) { # fixed perm, usr, grp.
+	($ref->[0], $ref->[1], $ref->[2]) = ($fhe->[0], $fhe->[1], $fhe->[2]);
+    }
+    else {
+	if ($perm) {
+	    $ref->[0] = $perm;
+	}
+	else {
+	    $maybeee{$ref->[5]} = $ref;
+	}
+    }
+    if (@_) {
+	pop @{$ref};
+	push @{$ref}, @_;
+    }
+}
+
+sub checkelfs()
+{
+    open FILES, '-|', 'file', sort keys %maybeee
+	#or die "Cannot execute 'file': $!\n";
+	or return; #patch by @travisgoodspeed for massive packages.
+    while (<FILES>) {
+	my ($file, $desc) = split /:\s+/, $_, 2;
+	my $ref = $maybeee{$file};
+	warn("XXX: $file\n"), next unless defined $ref;
+	$ref->[0] = '755' if ($desc =~ /ELF.*executable/);
+    }
+    close FILES;
+}
+
+
+foreach my $package (@{$dh{DOPACKAGES}}) {
+	my $tmp=tmpdir($package);
+
+	my $find_options='';
+	if (defined($dh{EXCLUDE_FIND}) && $dh{EXCLUDE_FIND} ne '') {
+		$find_options="! \\( $dh{EXCLUDE_FIND} \\)";
+	}
+
+	my %filenodes;
+
+	fillfixhash $tmp . '.fixedperms';
+
+	open F, '-|', "find $tmp $find_options" or die;
+	my $l = length $tmp;
+	my @files;
+	while (<F>) {
+	    chomp;
+	    my $d = substr $_, $l;
+	    next if index($d, '/DEBIAN') == 0;
+	    next unless length $d;
+	    push @files, [ '644', 'root', 'root', '.', '.'.$d, $_ ];
+	}
+	@files = sort { $a->[4] cmp $b->[4] } @files;
+	close F;
+	foreach my $ref (@files) {
+		my @st = lstat $ref->[5]; # [0] = dev, [1] = ino, [3] = nlink.
+
+		if (-d _) {
+			# rest (if not all) directories set 755
+			fixfile $ref, '755', '/';
+			next;
+		}
+		# Note: linux (ext3) can have hardlink to symlink.
+		# On Mac OS X hardlink points to the symlink destination. 
+		if (-l _) {
+			my $dest = readlink $ref->[5];
+			makesymlink $ref, $dest;
+			next;
+		}
+		if (-s _ == 4207) {
+		    my $dest = trickysymlink $ref->[5];
+		    makesymlink ($ref, $dest), next if defined $dest;
+		}
+		next unless -f _;
+		if ($st[3] > 1) {
+		    my $key = "$st[0] $st[1]";
+		    my $f = $filenodes{$key};
+		    if (defined $f) {
+			makehardlink $ref, $f;
+			next;
+		    }
+		    $filenodes{$key} = $ref->[4];
+		}
+		$_ = $ref->[4];
+		# Programs in the bin and init.d dirs should be executable..
+		if (m,(^|/)bin/, || m,(^|/)sbin/, || m,(^|/)usr/libexec/,
+			|| m,(^|/)usr/games/, || m,(^|/)etc/init.d/, ) {
+			fixfile $ref, '755';
+			next;
+		}
+
+		# Files in /usr/share/doc not executables, but examples may be.
+		if (m,(^|/)usr/share/doc/, and not m,/examples/,) {
+			fixfile $ref, '644';
+			next;
+		}
+
+		# ADA ali files should be mode 444 to avoid recompilation
+		if (m,(^|/)usr/lib/ada/,) {
+			fixfile $ref, '444';
+			next;
+		}
+		# rest (files), check later for 644 / 755 (by using file(1))
+		fixfile $ref, '';
+	}
+
+	if (%fixhash) {
+	    warn "'$tmp.fixedperms' had entries not found in package creation:\n";
+	    while (my ($key, $value) = each %fixhash) {
+		my $line = pop @$value;
+		print "line $line: @$value $key\n";
+	    }
+	    exit 1;
+	}
+	checkelfs if %maybeee;
+
+	open O, '>', "$tmp.tarlist" or die;
+
+	print O "# This file is created by MADDE 'dh_fixperms'.\n";
+	print O "# MADDE 'dpkg-deb' uses this file when creating\n";
+	print O "# 'data.tar.gz' for debian package ar archive.\n";
+
+	undef %maybeee;
+	foreach ( @files ) {
+	    $_->[4] =~ s/ /\\ /g;
+	    $_->[ (defined $_->[6])? 6: 5 ] =~ s/ /\\ /g;
+	    print O "@{$_}\n";
+	}
+	close O;
+}

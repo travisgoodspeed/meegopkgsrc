@@ -1,11 +1,15 @@
 
 #These three need to be exported in your shell, not just the Makefile.
-PERL5LIB=/opt/qtsdk/Maemo/4.6.2/madlib/perl5/
-AEGIS_TOOL_PREFIX=/opt/qtsdk/Madde/targets/harmattan-nokia-meego-api/bin/
+#PERL5LIB=/opt/qtsdk/Maemo/4.6.2/madlib/perl5/
+PERL5LIB=/opt/QtSDK/Madde/madlib/perl5/
+#AEGIS_TOOL_PREFIX=/opt/qtsdk/Madde/targets/harmattan-nokia-meego-api/bin/
+AEGIS_TOOL_PREFIX=/opt/QtSDK/Madde/targets/harmattan_10.2011.34-1/bin/
 SYSROOT_DIR=/opt/qtsdk/Madde/sysroots/harmattan-nokia-arm-sysroot
 
+EXCLUDES=--exclude \*.pc --exclude fonts --exclude python2.6 --exclude perl5 --exclude tk8.4 --exclude tcl8.4 --exclude man --exclude zsh --exclude emacs --exclude version.pm
+
 #Change this to your own development host.
-compilehost=home
+compilehost=goodsat
 
 
 all: build
@@ -31,10 +35,10 @@ build: clean
 digsigsums:
 	rm -rf /tmp/pkgsrc
 	mkdir -p /tmp/pkgsrc/opt/pkgsrc/
-	rsync -apv debian/pkgsrc/opt/pkgsrc/bin  /tmp/pkgsrc/opt/pkgsrc/
+	rsync -apv $(EXCLUDES) debian/pkgsrc/opt/pkgsrc/bin  /tmp/pkgsrc/opt/pkgsrc/
 	#Needed for git, but breaks compatibility.
 	#rsync -apv debian/pkgsrc/opt/pkgsrc/libexec  /tmp/pkgsrc/opt/pkgsrc/
-	rsync -apv --exclude python2.6 --exclude perl5 --exclude tk8.4 --exclude tcl8.4 --exclude man --exclude zsh --exclude emacs --exclude version.pm debian/pkgsrc/opt/pkgsrc/lib  /tmp/pkgsrc/opt/pkgsrc/
+	rsync -apv $(EXCLUDES) debian/pkgsrc/opt/pkgsrc/lib  /tmp/pkgsrc/opt/pkgsrc/
 	gendigsigsums - /tmp/pkgsrc >debian/pkgsrc/DEBIAN/digsigsums
 put:
 	ssh root@n9 rm -f /home/user/MyDocs/`ls dest`
